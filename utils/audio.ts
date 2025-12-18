@@ -1,9 +1,10 @@
+
 let cachedVoices: SpeechSynthesisVoice[] = [];
 let isLoaded = false;
-let currentAudio: HTMLAudioElement | null = null; // 追踪当前正在播放的 HTML5 Audio 对象
+let currentAudio: HTMLAudioElement | null = null; // Track currently playing HTML5 Audio
 
 /**
- * 尽早预加载 TTS 语音
+ * Preloads voices as early as possible.
  */
 export const preloadVoices = () => {
   const synth = window.speechSynthesis;
@@ -21,23 +22,19 @@ export const preloadVoices = () => {
 };
 
 /**
- * 停止所有当前正在播放的音频（包括 TTS 和全局追踪的 HTML5 Audio）
- * 并广播全局信号停止其他本地媒体组件（如视频标签）
+ * Stops all currently playing audio (TTS and HTML5 Audio).
  */
 export const stopAudio = () => {
-  // 1. 停止系统 TTS
+  // 1. Stop TTS
   const synth = window.speechSynthesis;
   synth.cancel();
   
-  // 2. 停止全局追踪的 HTML5 Audio
+  // 2. Stop HTML5 Audio
   if (currentAudio) {
       currentAudio.pause();
-      currentAudio.currentTime = 0; // 重置进度
+      currentAudio.currentTime = 0; // Reset position
       currentAudio = null;
   }
-
-  // 3. 分发全局信号，通知视频、歌曲等本地媒体组件停止播放
-  window.dispatchEvent(new CustomEvent('reword:stop-media'));
 };
 
 export const unlockAudio = () => {
@@ -64,15 +61,15 @@ const waitForVoices = (): Promise<SpeechSynthesisVoice[]> => {
 };
 
 /**
- * 播放任意 URL 音频并返回 Promise
- * 播放前会自动调用 stopAudio()
+ * Plays arbitrary URL audio with a promise wrapper.
+ * Stops any previously playing audio.
  */
 export const playUrl = (url: string, playbackRate: number = 1.0): Promise<void> => {
-    stopAudio(); // 停止所有冲突音频
+    stopAudio(); // Stop overlapping audio
 
     return new Promise((resolve, reject) => {
         const audio = new Audio(url);
-        currentAudio = audio; // 注册为当前播放音频
+        currentAudio = audio; // Register as current
         
         audio.playbackRate = playbackRate;
         
@@ -97,11 +94,11 @@ export const playUrl = (url: string, playbackRate: number = 1.0): Promise<void> 
 };
 
 /**
- * 标准浏览器 TTS 朗读
+ * Standard Browser TTS (Fallback)
  */
 export const playTextToSpeech = async (text: string, accent: 'US' | 'UK' = 'US', rate: number = 1.0, repeat: number = 1) => {
   if (!text || repeat <= 0) return;
-  stopAudio(); // 确保其他音频停止
+  stopAudio(); // Ensure other audio stops
 
   const synth = window.speechSynthesis;
   if (synth.paused) synth.resume();
@@ -126,11 +123,12 @@ export const playTextToSpeech = async (text: string, accent: 'US' | 'UK' = 'US',
 };
 
 /**
- * 智能音频播放：优先有道在线流，失败则回退到 TTS
+ * Smart Audio Player: Youdao Online Stream -> TTS Fallback
  */
 export const playWordAudio = async (text: string, accent: 'US' | 'UK' = 'US', speed: number = 1.0) => {
     if (!text) return;
     
+    // Type 1 = UK, Type 2 = US (Youdao convention)
     const type = accent === 'UK' ? 1 : 2;
     const url = `https://dict.youdao.com/dictvoice?audio=${encodeURIComponent(text)}&type=${type}`;
 
@@ -143,7 +141,7 @@ export const playWordAudio = async (text: string, accent: 'US' | 'UK' = 'US', sp
 };
 
 /**
- * 智能句子播放
+ * Smart Sentence Player.
  */
 export const playSentenceAudio = async (text: string, explicitUrl?: string, accent: 'US' | 'UK' = 'US', speed: number = 1.0) => {
     if (explicitUrl) {
@@ -153,6 +151,7 @@ export const playSentenceAudio = async (text: string, explicitUrl?: string, acce
         } catch(e) { console.warn("Explicit URL failed"); }
     }
 
+    // Try Youdao for sentences
     const type = accent === 'UK' ? 1 : 2;
     const url = `https://dict.youdao.com/dictvoice?audio=${encodeURIComponent(text)}&type=${type}`;
     
