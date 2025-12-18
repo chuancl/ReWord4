@@ -91,9 +91,11 @@ const TriggerInput = ({ label, value, onChange }: { label: string, value: Intera
 interface InteractionSectionProps {
   config: WordInteractionConfig;
   setConfig: React.Dispatch<React.SetStateAction<WordInteractionConfig>>;
+  onShowDetail?: (word: string) => void;
+  onOpenWords?: (word: string) => void;
 }
 
-export const InteractionSection: React.FC<InteractionSectionProps> = ({ config, setConfig }) => {
+export const InteractionSection: React.FC<InteractionSectionProps> = ({ config, setConfig, onShowDetail, onOpenWords }) => {
   
   // State for preview interaction simulation
   const [isPreviewVisible, setIsPreviewVisible] = useState(false);
@@ -121,7 +123,6 @@ export const InteractionSection: React.FC<InteractionSectionProps> = ({ config, 
       const { modifier } = config.mainTrigger;
       
       const domModifier = getDomModifier(modifier);
-      // Casting to any to satisfy React's strict ModifierKey type for getModifierState
       const isModifierMatch = !domModifier || e.getModifierState(domModifier as any);
 
       if (!isModifierMatch) return;
@@ -129,27 +130,20 @@ export const InteractionSection: React.FC<InteractionSectionProps> = ({ config, 
       if (config.mainTrigger.action === action) {
           e.preventDefault(); // For right click
           if (action !== 'Hover') {
-             if (!isPreviewVisible) {
-                setIsPreviewVisible(true);
-             } else {
-                setIsPreviewVisible(false);
-             }
+             setIsPreviewVisible(!isPreviewVisible);
           }
       }
   };
 
   const onMouseEnter = (e: React.MouseEvent) => {
-      // Clear any pending hide
       if (hideTimer.current) {
           clearTimeout(hideTimer.current);
           hideTimer.current = null;
       }
 
       if (config.mainTrigger.action === 'Hover') {
-         // Check modifier if needed (though hover usually implies none or checked during move)
          const { modifier } = config.mainTrigger;
          const domModifier = getDomModifier(modifier);
-         // Casting to any to satisfy React's strict ModifierKey type for getModifierState
          if (domModifier && !e.getModifierState(domModifier as any)) return;
 
          if (showTimer.current) clearTimeout(showTimer.current);
@@ -165,7 +159,6 @@ export const InteractionSection: React.FC<InteractionSectionProps> = ({ config, 
           showTimer.current = null;
       }
       
-      // Delay hiding using configured delay
       if (hideTimer.current) clearTimeout(hideTimer.current);
       hideTimer.current = setTimeout(() => {
           setIsPreviewVisible(false);
@@ -185,8 +178,6 @@ export const InteractionSection: React.FC<InteractionSectionProps> = ({ config, 
           setIsPreviewVisible(false);
       }, config.dismissDelay || 300);
   };
-
-  // --- Layout & Styles ---
 
   const getPreviewPositionClass = (pos: BubblePosition) => {
      switch(pos) {
@@ -208,11 +199,7 @@ export const InteractionSection: React.FC<InteractionSectionProps> = ({ config, 
      }
   };
 
-  // Shift the word to make room for the bubble in the preview container
   const getWordShiftClass = (pos: BubblePosition) => {
-      // If bubble is LEFT, move word RIGHT (translate-x).
-      // If bubble is RIGHT, move word LEFT (-translate-x).
-      // Use larger values to ensure bubble doesn't get clipped by overflow:hidden if container had it (though here it's flex)
       switch(pos) {
           case 'left': return 'translate-x-24';
           case 'right': return '-translate-x-24';
@@ -263,7 +250,6 @@ export const InteractionSection: React.FC<InteractionSectionProps> = ({ config, 
                     onChange={(val) => setConfig({...config, quickAddTrigger: val})}
                 />
 
-                {/* Auto Pronounce Settings */}
                 <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 block">自动朗读设置</label>
                    <div className="flex gap-4 items-end">
@@ -317,7 +303,6 @@ export const InteractionSection: React.FC<InteractionSectionProps> = ({ config, 
                     </label>
                   </div>
                   
-                  {/* Dismiss Delay & Multiple Bubbles */}
                   <div className="mt-4 grid grid-cols-2 gap-4">
                       <div className="p-3 border rounded-lg bg-slate-50">
                           <label className="text-[10px] text-slate-500 block mb-1">气泡消失延迟 (ms)</label>
@@ -338,7 +323,6 @@ export const InteractionSection: React.FC<InteractionSectionProps> = ({ config, 
                       </div>
                   </div>
 
-                  {/* Online Dict Link Config */}
                   <div className="mt-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
                       <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">在线词典链接 (URL Template)</label>
                       <input 
@@ -353,7 +337,6 @@ export const InteractionSection: React.FC<InteractionSectionProps> = ({ config, 
               </div>
            </div>
 
-           {/* Preview Bubble */}
            <div className="flex flex-col">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex justify-between">
                  <span>交互效果预览</span>
@@ -381,20 +364,21 @@ export const InteractionSection: React.FC<InteractionSectionProps> = ({ config, 
                         ephemeral
                     </span>
                     
-                    {/* The Bubble - Dynamically Positioned */}
                     {isPreviewVisible && (
                         <div 
                             className={`absolute w-64 bg-white rounded-lg shadow-xl border border-slate-200 p-5 z-10 transition-all duration-300 animate-in fade-in zoom-in-95 ${getPreviewPositionClass(config.bubblePosition)}`}
                             onMouseEnter={onBubbleEnter}
                             onMouseLeave={onBubbleLeave}
                         >
-                        
-                            {/* Arrow - Dynamically Positioned */}
                             <div className={`absolute w-3 h-3 bg-white border border-slate-200 transform rotate-45 z-[-1] ${getArrowClass(config.bubblePosition)}`}></div>
 
                             <div className="flex justify-between items-start mb-3">
-                                <div>
-                                    <h4 className="font-bold text-xl text-slate-900 leading-tight mb-1">ephemeral</h4>
+                                <div 
+                                    className="cursor-pointer group/title"
+                                    onClick={() => onOpenWords?.('ephemeral')}
+                                    title="在词库中搜索该词"
+                                >
+                                    <h4 className="font-bold text-xl text-slate-900 leading-tight mb-1 group-hover/title:text-blue-600 transition-colors">ephemeral</h4>
                                     {config.showPhonetic && <span className="text-xs text-slate-400 font-mono block">/əˈfem(ə)rəl/</span>}
                                 </div>
                                 <div className="flex gap-2">
@@ -431,9 +415,11 @@ export const InteractionSection: React.FC<InteractionSectionProps> = ({ config, 
                                 </div>
                             )}
 
-                            {/* Link Container - Matching WordBubble.tsx  */}
                             <div className="mt-4 pt-3 border-t border-slate-100 text-[11px] flex gap-4">
-                                <div className="flex items-center text-slate-500 hover:text-blue-600 transition-colors cursor-pointer">
+                                <div 
+                                    className="flex items-center text-slate-500 hover:text-blue-600 transition-colors cursor-pointer"
+                                    onClick={() => onShowDetail?.('ephemeral')}
+                                >
                                     <BookOpen className="w-3 h-3 mr-1.5" />
                                     详细信息
                                 </div>
