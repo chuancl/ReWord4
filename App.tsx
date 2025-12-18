@@ -65,6 +65,28 @@ const App: React.FC = () => {
       if (sAuto) setAutoTranslateConfig(sAuto);
       if (sDicts) setDictionaries(sDicts);
 
+      // --- URL Parameter Handling (Routing) ---
+      const params = new URLSearchParams(window.location.search);
+      const viewParam = params.get('view') as AppView;
+      const wordParam = params.get('word');
+      const tabParam = params.get('tab') as WordTab;
+      const searchParam = params.get('search');
+
+      if (viewParam === 'word-detail' && wordParam) {
+          setDetailWord(wordParam);
+          setCurrentView('word-detail');
+      } else if (viewParam === 'words') {
+          setCurrentView('words');
+          if (tabParam) setManagerTab(tabParam);
+          if (searchParam) setManagerSearchQuery(searchParam);
+      } else if (viewParam === 'settings') {
+          setCurrentView('settings');
+          const sectionParam = params.get('section') as SettingSectionId;
+          if (sectionParam) {
+              setTimeout(() => handleSettingScroll(sectionParam), 100);
+          }
+      }
+
       setIsLoading(false);
     };
 

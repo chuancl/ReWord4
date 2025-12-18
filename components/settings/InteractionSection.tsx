@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { WordInteractionConfig, InteractionTrigger, ModifierKey, MouseAction, BubblePosition } from '../../types';
 import { Volume2, Info, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Plus, ExternalLink, BookOpen } from 'lucide-react';
 import { playTextToSpeech } from '../../utils/audio';
+import { browser } from 'wxt/browser';
 
 const Tooltip: React.FC<{ text: string; children: React.ReactNode }> = ({ text, children }) => {
   return (
@@ -209,6 +210,14 @@ export const InteractionSection: React.FC<InteractionSectionProps> = ({ config, 
       }
   };
 
+  // Preview helper to open real options page in new tab
+  const openNewTab = (view: string, word: string, search?: string, tab?: string) => {
+      let path = `options.html?view=${view}&word=${encodeURIComponent(word)}`;
+      if (search) path += `&search=${encodeURIComponent(search)}`;
+      if (tab) path += `&tab=${tab}`;
+      browser.runtime.sendMessage({ action: 'OPEN_OPTIONS_PAGE', path });
+  };
+
   return (
     <section className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="p-6 border-b border-slate-200">
@@ -375,8 +384,8 @@ export const InteractionSection: React.FC<InteractionSectionProps> = ({ config, 
                             <div className="flex justify-between items-start mb-3">
                                 <div 
                                     className="cursor-pointer group/title"
-                                    onClick={() => onOpenWords?.('ephemeral')}
-                                    title="在词库中搜索该词"
+                                    onClick={() => openNewTab('words', 'ephemeral', 'ephemeral', 'all')}
+                                    title="在词库中搜索该词 (新窗口)"
                                 >
                                     <h4 className="font-bold text-xl text-slate-900 leading-tight mb-1 group-hover/title:text-blue-600 transition-colors">ephemeral</h4>
                                     {config.showPhonetic && <span className="text-xs text-slate-400 font-mono block">/əˈfem(ə)rəl/</span>}
@@ -418,10 +427,10 @@ export const InteractionSection: React.FC<InteractionSectionProps> = ({ config, 
                             <div className="mt-4 pt-3 border-t border-slate-100 text-[11px] flex gap-4">
                                 <div 
                                     className="flex items-center text-slate-500 hover:text-blue-600 transition-colors cursor-pointer"
-                                    onClick={() => onShowDetail?.('ephemeral')}
+                                    onClick={() => openNewTab('word-detail', 'ephemeral')}
                                 >
                                     <BookOpen className="w-3 h-3 mr-1.5" />
-                                    详细信息
+                                    详细信息 (新窗口)
                                 </div>
                                 {config.onlineDictUrl && (
                                     <a 

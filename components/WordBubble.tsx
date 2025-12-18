@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { WordEntry, WordInteractionConfig, WordCategory } from '../types';
 import { Volume2, Plus, Check, ExternalLink, BookOpen } from 'lucide-react';
@@ -86,7 +85,7 @@ export const WordBubble: React.FC<WordBubbleProps> = ({
       e.stopPropagation();
       if (!entry) return;
       // Delegate to background script to avoid ERR_BLOCKED_BY_CLIENT
-      const path = `/options.html?view=word-detail&word=${encodeURIComponent(entry.text)}`;
+      const path = `options.html?view=word-detail&word=${encodeURIComponent(entry.text)}`;
       browser.runtime.sendMessage({ action: 'OPEN_OPTIONS_PAGE', path });
   };
 
@@ -95,7 +94,7 @@ export const WordBubble: React.FC<WordBubbleProps> = ({
       e.stopPropagation();
       if (!entry) return;
       // Construct URL with view=words, tab=all, and search=currentWord
-      const path = `/options.html?view=words&tab=all&search=${encodeURIComponent(entry.text)}`;
+      const path = `options.html?view=words&tab=all&search=${encodeURIComponent(entry.text)}`;
       browser.runtime.sendMessage({ action: 'OPEN_OPTIONS_PAGE', path });
   };
 
