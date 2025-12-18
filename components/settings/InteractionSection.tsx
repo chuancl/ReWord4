@@ -385,7 +385,7 @@ export const InteractionSection: React.FC<InteractionSectionProps> = ({ config, 
                                 <div 
                                     className="cursor-pointer group/title"
                                     onClick={() => openNewTab('words', 'ephemeral', 'ephemeral', 'all')}
-                                    title="在词库中搜索该词 (新窗口)"
+                                    title="在词库中搜索该词"
                                 >
                                     <h4 className="font-bold text-xl text-slate-900 leading-tight mb-1 group-hover/title:text-blue-600 transition-colors">ephemeral</h4>
                                     {config.showPhonetic && <span className="text-xs text-slate-400 font-mono block">/əˈfem(ə)rəl/</span>}
@@ -430,7 +430,7 @@ export const InteractionSection: React.FC<InteractionSectionProps> = ({ config, 
                                     onClick={() => openNewTab('word-detail', 'ephemeral')}
                                 >
                                     <BookOpen className="w-3 h-3 mr-1.5" />
-                                    详细信息 (新窗口)
+                                    详细信息
                                 </div>
                                 {config.onlineDictUrl && (
                                     <a 

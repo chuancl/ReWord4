@@ -136,19 +136,24 @@ const App: React.FC = () => {
     );
   }
 
+  // Determine if sidebar should be shown
+  const showSidebar = currentView !== 'word-detail';
+
   return (
     <div className="flex min-h-screen bg-slate-50">
-      <Sidebar 
-        currentView={currentView} 
-        onViewChange={(v) => {
-            setCurrentView(v);
-            if (v === 'words') { setManagerSearchQuery(''); setManagerTab('all'); }
-        }} 
-        onSettingScroll={handleSettingScroll}
-        activeSettingSection={activeSettingSection}
-      />
+      {showSidebar && (
+        <Sidebar 
+          currentView={currentView} 
+          onViewChange={(v) => {
+              setCurrentView(v);
+              if (v === 'words') { setManagerSearchQuery(''); setManagerTab('all'); }
+          }} 
+          onSettingScroll={handleSettingScroll}
+          activeSettingSection={activeSettingSection}
+        />
+      )}
 
-      <main className="flex-1 ml-64 p-8 max-w-7xl mx-auto w-full">
+      <main className={`flex-1 p-8 w-full transition-all duration-300 ${showSidebar ? 'ml-64 max-w-7xl mx-auto' : 'ml-0'}`}>
         {currentView === 'dashboard' && <Dashboard entries={entries} scenarios={scenarios} />}
         
         {currentView === 'words' && (
@@ -165,7 +170,10 @@ const App: React.FC = () => {
         {currentView === 'word-detail' && (
           <WordDetail 
             word={detailWord} 
-            onBack={() => setCurrentView('words')} 
+            onBack={() => {
+              // Try to go back to words or dashboard
+              setCurrentView('words');
+            }} 
           />
         )}
 
